@@ -128,9 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/health');
       const data = await res.json();
-      if (res.ok && data.database === 'connected') {
+      if (res.ok && data.database && data.database.startsWith('connected')) {
         statusDot.className = 'status-dot online';
-        statusText.textContent = 'Database: Connected';
+        const label = data.database.includes('postgresql') ? 'PostgreSQL' : 'Online (Local)';
+        statusText.textContent = `Database: ${label}`;
       } else {
         statusDot.className = 'status-dot offline';
         statusText.textContent = 'Database: Connecting...';

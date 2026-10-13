@@ -35,6 +35,7 @@ app.get('/api/health', async (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     database: dbStatus,
+    engine: typeof db.isConnected === 'function' && db.isConnected() ? 'postgresql' : 'local-store',
     environment: process.env.NODE_ENV || 'development',
   });
 });
