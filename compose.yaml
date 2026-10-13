@@ -1,0 +1,53 @@
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:16-alpine
+    container_name: expensetrack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-expensetrack}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - expensetrack-net
+
+  # Node.js / Express Web Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expensetrack-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-expensetrack}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - expensetrack-net
+
+# Persistent Named Volumes
+volumes:
+  postgres_data:
+    name: expensetrack_postgres_data
+
+# Internal Isolated Network
+networks:
+  expensetrack-net:
+    driver: bridge
